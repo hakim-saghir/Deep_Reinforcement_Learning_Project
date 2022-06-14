@@ -7,36 +7,36 @@ from drl_lib.do_not_touch.contracts import *
 class LineWorldMDP(MDPEnv):
 
     def __init__(self):
-        self.S = np.array([i for i in range(7)])
-        self.A = np.array([0, 1])
-        self.R = np.array([-1.0, 0.0, 1.0])
-        self.psasr = np.zeros((len(self.S), len(self.A), len(self.S), len(self.R)))
+        self._S = np.array([i for i in range(7)])
+        self._A = np.array([0, 1])
+        self._R = np.array([-1.0, 0.0, 1.0])
+        self._psasr = np.zeros((len(self._S), len(self._A), len(self._S), len(self._R)))
 
-        for s in self.S[1:-1]:
+        for s in self._S[1:-1]:
             if s == 1:
-                self.psasr[s, 0, s - 1, 0] = 1.0
+                self._psasr[s, 0, s - 1, 0] = 1.0
             else:
-                self.psasr[s, 0, s - 1, 1] = 1.0
+                self._psasr[s, 0, s - 1, 1] = 1.0
 
             if s == 7 - 2:
-                self.psasr[s, 1, s + 1, 2] = 1.0
+                self._psasr[s, 1, s + 1, 2] = 1.0
             else:
-                self.psasr[s, 1, s + 1, 1] = 1.0
+                self._psasr[s, 1, s + 1, 1] = 1.0
 
     def states(self) -> np.ndarray:
-        return self.S
+        return self._S
 
     def actions(self) -> np.ndarray:
-        return self.A
+        return self._A
 
     def rewards(self) -> np.ndarray:
-        return self.R
+        return self._R
 
     def is_state_terminal(self, s: int) -> bool:
         return s == 0 or s == 6
 
     def transition_probability(self, s: int, a: int, s_p: int, r: float) -> float:
-        return self.psasr[s, a, s_p, r]
+        return self._psasr[s, a, s_p, r]
 
     def view_state(self, s: int):
         pass

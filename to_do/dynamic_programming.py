@@ -24,8 +24,10 @@ def policy_evaluation_on_line_world() -> ValueFunction:
     policy[0] = {0: 0.0, 1: 0.0}
     policy[6] = {0: 0.0, 1: 0.0}
 
+    print(policy)
+
     # Algorithme
-    threshold = 0.00001
+    threshold = 0.0000001
 
     # Création et intialisation de la value function
     value_function = {}
@@ -48,9 +50,9 @@ def policy_evaluation_on_line_world() -> ValueFunction:
                     R = mdp_env.rewards()
                     for r in range(len(R)):
                         total += mdp_env.transition_probability(s, a, s_p, r) * (R[r] + 0.999 * value_function[s_p])
-                    total *= policy[s][a]
-                    value_function[s] += total
-                delta = max(delta, np.abs(v - value_function[s]))
+                total *= policy[s][a]
+                value_function[s] += total
+            delta = max(delta, np.abs(v - value_function[s]))
         if delta < threshold:
             break
     return value_function
