@@ -39,7 +39,13 @@ class LineWorldMDP(MDPEnv):
         return self._psasr[s, a, s_p, r]
 
     def view_state(self, s: int):
-        pass
+        view = ""
+        for s_1 in self._S:
+            if s_1 == s:
+                view += "X"
+            else:
+                view += "_"
+        print(view)
 
 
 class LineWorld(SingleAgentEnv):
