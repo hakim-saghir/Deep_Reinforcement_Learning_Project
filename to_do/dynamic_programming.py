@@ -88,8 +88,9 @@ def policy_iteration_on_line_world() -> PolicyAndValueFunction:
 
     for s in S:
         sum = np.sum(list(policy[s].values()))
-        for a in A:
-            policy[s][a] /= sum
+        if sum != 0:
+            for a in A:
+                policy[s][a] /= sum
 
     for k in policy[0].keys():
         policy[0][k] = 0.0
@@ -265,6 +266,7 @@ def policy_iteration_on_grid_world() -> PolicyAndValueFunction:
     R = mdp_env.rewards()
     A = mdp_env.actions()
 
+
     # Création de la policy
     policy = {}
     for s in S:
@@ -275,8 +277,9 @@ def policy_iteration_on_grid_world() -> PolicyAndValueFunction:
 
     for s in S:
         sum = np.sum(list(policy[(s[0], s[1])].values()))
-        for a in A:
-            policy[(s[0], s[1])][a] /= sum
+        if sum != 0:
+            for a in A:
+                policy[(s[0], s[1])][a] /= sum
 
     for k in policy[(0,0)].keys():
         policy[(0,0)][k] = 0.0
@@ -402,8 +405,48 @@ def policy_evaluation_on_secret_env1() -> ValueFunction:
     Returns the Value function (V(s)) of this policy
     """
     env = Env1()
-    # TODO
-    pass
+    S = env.states()
+    A = env.actions()
+    R = env.rewards()
+
+    # Création de la policy
+    policy = {}
+    for s in S:
+        actions = {}
+        if env.is_state_terminal(s):
+            for j in A:
+                actions[j] = 0.0
+        else:
+            for j in A:
+                actions[j] = 1/len(A)
+        policy[s] = actions
+
+    # Algorithme
+    threshold = 0.0000001
+
+    # Création et intialisation de la value function
+    value_function = {}
+    for s in S:
+        value_function[s] = rand.random()
+        if env.is_state_terminal(s):
+            value_function[s] = 0.0
+
+    while True:
+        delta = 0
+        for s in S:
+            v = value_function[s]
+            value_function[s] = 0.0
+            for a in A:
+                total = 0.0
+                for s_p in S:
+                    for r in range(len(R)):
+                        total += env.transition_probability(s, a, s_p, r) * (R[r] + 0.999 * value_function[s_p])
+                total *= policy[s][a]
+                value_function[s] += total
+            delta = max(delta, np.abs(v - value_function[s]))
+        if delta < threshold:
+            break
+    return value_function
 
 
 def policy_iteration_on_secret_env1() -> PolicyAndValueFunction:
@@ -413,8 +456,78 @@ def policy_iteration_on_secret_env1() -> PolicyAndValueFunction:
     Returns the Policy (Pi(s,a)) and its Value Function (V(s))
     """
     env = Env1()
-    # TODO
-    pass
+    S = env.states()
+    A = env.actions()
+    R = env.rewards()
+
+    # Création de la policy
+    policy = {}
+    for s in S:
+        actions = {}
+        if env.is_state_terminal(s):
+            for j in A:
+                actions[j] = 0.0
+        else:
+            for j in A:
+                actions[j] = rand.random()
+        policy[s] = actions
+
+    for s in S:
+        sum = np.sum(list(policy[s].values()))
+        if sum != 0:
+            for a in A:
+                policy[s][a] /= sum
+
+    # Algorithme
+    threshold = 0.0000001
+
+    # Création et intialisation de la value function
+    value_function = {}
+    for s in S:
+        value_function[s] = rand.random()
+        if env.is_state_terminal(s):
+            value_function[s] = 0.0
+
+    while True:
+        while True:
+            delta = 0
+            for s in S:
+                v = value_function[s]
+                value_function[s] = 0.0
+                for a in A:
+                    total = 0.0
+                    for s_p in S:
+                        for r in range(len(R)):
+
+                            total += env.transition_probability(s, a, s_p, r) * (
+                                    R[r] + 0.999 * value_function[s_p])
+
+                    total *= policy[s][a]
+                    value_function[s] += total
+                delta = max(delta, abs(v - value_function[s]))
+            if delta < threshold:
+                break
+
+        stable = True
+        for s in S:
+            old_policy = policy[s].copy()
+            best_a = -1
+            best_a_score = -9999999
+            for a in A:
+                total = 0
+                for s_p in S:
+                    for r in range(len(R)):
+                        total += env.transition_probability(s, a, s_p, r) * (R[r] + 0.999 * value_function[s_p])
+                if total > best_a_score:
+                    best_a = a
+                    best_a_score = total
+            for k in policy[s].keys():
+                policy[s][k] = 0.0
+            policy[s][best_a] = 1.0
+            if old_policy != policy[s]:
+                stable = False
+        if stable:
+            return policy, value_function
 
 
 def value_iteration_on_secret_env1() -> PolicyAndValueFunction:
@@ -424,22 +537,76 @@ def value_iteration_on_secret_env1() -> PolicyAndValueFunction:
     Prints the Policy (Pi(s,a)) and its Value Function (V(s))
     """
     env = Env1()
-    # TODO
-    pass
+
+    # Création de l'environnement
+    S = env.states()
+    R = env.rewards()
+    A = env.actions()
+
+    # Création de la policy
+    policy = {}
+
+    # Création et intialisation de la value function
+    value_function = {}
+    for s in S:
+        value_function[s] = rand.random()
+        if env.is_state_terminal(s):
+            value_function[s] = 0.0
+
+    # Algorithme
+    threshold = 0.0000001
+
+    while True:
+        delta = 0
+        best_value_function = {}
+        for s in S:
+            best_value_function[s] = 0.0
+        for s in S:
+            v = value_function[s]
+            max_reward = 0
+            for a in A:
+                total = 0
+                for s_p in S:
+                    for r in range(len(R)):
+                        total += env.transition_probability(s, a, s_p, r) * (
+                                    R[r] + 0.999 * value_function[s_p])
+
+                max_val = max(max_reward, total)
+                print(total)
+
+                if best_value_function[s] < total:
+                    actions = {}
+                    for a_s in A:
+                        if a_s == a:
+                            actions[a] = 1.0
+                        else:
+                            actions[a_s] = 0.0
+                    print(actions)
+                    policy[s] = actions
+
+            best_value_function[s] = max_val
+            delta = max(delta, abs(value_function[s] - best_value_function[s]))
+        value_function = best_value_function
+
+        if delta < threshold:
+            break
+
+    return policy, value_function
 
 
 def demo():
-    print(policy_evaluation_on_line_world())
-    print(policy_iteration_on_line_world())
-    print(value_iteration_on_line_world())
-
-    print(policy_evaluation_on_grid_world())
-    print(policy_iteration_on_grid_world())
-    print(value_iteration_on_grid_world())
+    # print(policy_evaluation_on_line_world())
+    # print(policy_iteration_on_line_world())
+    # print(value_iteration_on_line_world())
+    #
+    # print(policy_evaluation_on_grid_world())
+    # print(policy_iteration_on_grid_world())
+    # print(value_iteration_on_grid_world())
 
     # print(policy_evaluation_on_secret_env1())
     # print(policy_iteration_on_secret_env1())
-    # print(value_iteration_on_secret_env1())
+
+    print(value_iteration_on_secret_env1())
 
 
 demo()
