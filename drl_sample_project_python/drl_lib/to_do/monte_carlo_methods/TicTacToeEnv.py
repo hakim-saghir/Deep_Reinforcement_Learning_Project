@@ -105,5 +105,5 @@ class TicTacToeEnv(SingleAgentEnv):
 
     def reset_random(self):
         self.current_state = np.array(self.S[random.randint(0, len(self.S) - 1)])
-        while(list(self.current_state).count(1) != list(self.current_state).count(2) or self.is_game_over()):
+        while(self.is_game_over() or list(self.current_state).count(1) != list(self.current_state).count(2)):
             self.current_state = np.array(self.S[random.randint(0, len(self.S) - 1)])

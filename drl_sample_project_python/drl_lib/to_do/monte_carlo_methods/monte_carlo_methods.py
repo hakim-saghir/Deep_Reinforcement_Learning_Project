@@ -8,12 +8,12 @@ from ...do_not_touch.single_agent_env_wrapper import Env2
 path_monte_carlo_es_policy = "./drl_lib/to_do/monte_carlo_methods/backups/monte_carlo_es_on_tic_tac_toe_solo_policy-iter_count={}.json"
 path_on_policy_first_visit_monte_carlo_control_policy = "./drl_lib/to_do/monte_carlo_methods/backups/on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo_policy-iter_count={}-epsilon_soft_pi={}.json"
 path_off_policy_monte_carlo_control_policy = "./drl_lib/to_do/monte_carlo_methods/backups/off_policy_monte_carlo_control_on_tic_tac_toe_solo_policy-iter_count={}-epsilon_soft_b={}.json"
-path_monte_carlo_es_policy_env2 = "./drl_lib/to_do/monte_carlo_methods/backups/monte_carlo_es_on_tic_tac_toe_solo_policy_env2-iter_count={}.json"
-path_on_policy_first_visit_monte_carlo_control_policy_env2 = "./drl_lib/to_do/monte_carlo_methods/backups/on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo_policy_env2-iter_count={}-epsilon_soft_pi={}.json"
-path_off_policy_monte_carlo_control_policy_env2 = "./drl_lib/to_do/monte_carlo_methods/backups/off_policy_monte_carlo_control_on_tic_tac_toe_solo_policy_env2-iter_count={}-epsilon_soft_b={}.json"
+path_monte_carlo_es_policy_env2 = "./drl_lib/to_do/monte_carlo_methods/backups_secret_envs/monte_carlo_es_on_tic_tac_toe_solo_policy_env2-iter_count={}.json"
+path_on_policy_first_visit_monte_carlo_control_policy_env2 = "./drl_lib/to_do/monte_carlo_methods/backups_secret_envs/on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo_policy_env2-iter_count={}-epsilon_soft_pi={}.json"
+path_off_policy_monte_carlo_control_policy_env2 = "./drl_lib/to_do/monte_carlo_methods/backups_secret_envs/off_policy_monte_carlo_control_on_tic_tac_toe_solo_policy_env2-iter_count={}-epsilon_soft_b={}.json"
 
 
-def monte_carlo_es_on_tic_tac_toe_solo(iter_count=100) -> PolicyAndActionValueFunction:
+def monte_carlo_es_on_tic_tac_toe_solo(iter_count=10) -> PolicyAndActionValueFunction:
     """
     Creates a TicTacToe Solo environment (Single player versus Uniform Random Opponent)
     Launches a Monte Carlo ES (Exploring Starts) in order to find the optimal Policy and its action-value function
@@ -24,6 +24,8 @@ def monte_carlo_es_on_tic_tac_toe_solo(iter_count=100) -> PolicyAndActionValueFu
     q = dict({})
     Returns = dict({})
     for it in range(iter_count):
+        if it % 10000 == 0:
+            print(it)
         tictactoe_env.reset_random()
         s0 = tictactoe_env.state_id()
         if tictactoe_env.is_game_over():
@@ -116,7 +118,7 @@ def monte_carlo_es_on_tic_tac_toe_solo(iter_count=100) -> PolicyAndActionValueFu
     return PolicyAndActionValueFunction(pi=pi, q=q)
 
 
-def on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100, epsilon_soft_pi=0.001) -> PolicyAndActionValueFunction:
+def on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo(iter_count=10, epsilon_soft_pi=0.001) -> PolicyAndActionValueFunction:
     """
     Creates a TicTacToe Solo environment (Single player versus Uniform Random Opponent)
     Launches an On Policy First Visit Monte Carlo Control algorithm in order to find the optimal epsilon-greedy Policy
@@ -129,6 +131,8 @@ def on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100
     q = dict({})
     Returns = dict({})
     for it in range(iter_count):
+        if it % 10000 == 0:
+            print(it)
         tictactoe_env.reset_random()
         if tictactoe_env.is_game_over():
             continue
@@ -235,7 +239,7 @@ def on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100
     return PolicyAndActionValueFunction(pi=pi, q=q)
 
 
-def off_policy_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100, epsilon_soft_b=0.001) -> PolicyAndActionValueFunction:
+def off_policy_monte_carlo_control_on_tic_tac_toe_solo(iter_count=10, epsilon_soft_b=0.001) -> PolicyAndActionValueFunction:
     """
     Creates a TicTacToe Solo environment (Single player versus Uniform Random Opponent)
     Launches an Off Policy Monte Carlo Control algorithm in order to find the optimal greedy Policy and its action-value function
@@ -245,6 +249,8 @@ def off_policy_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100, epsilon_s
     tictactoe_env = TicTacToeEnv()
     pi, q, c = dict({}), dict({}), dict({})
     for it in range(iter_count):
+        if it % 10000 == 0:
+            print(it)
         tictactoe_env.reset_random()
         if tictactoe_env.is_game_over():
             continue
@@ -293,7 +299,7 @@ def off_policy_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100, epsilon_s
             choices, probabilities = np.array(list(b[s_p].keys())), np.array(list(b[s_p].values()))
             probabilities /= np.sum(probabilities)
             a = np.random.choice(choices, p=probabilities)
-            tictactoe_env.act_with_action_id(a0)
+            tictactoe_env.act_with_action_id(a)
             s = s_p
             s_p = tictactoe_env.state_id()
             temp_array_soft_b = np.random.uniform(epsilon_soft_b, 1, (len(tictactoe_env.available_actions_ids())))
@@ -301,15 +307,16 @@ def off_policy_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100, epsilon_s
             while ((temp_array_soft_b < epsilon_soft_b).any()):
                 temp_array_soft_b[np.argmin(temp_array_soft_b)] *= 2
                 temp_array_soft_b /= np.sum(temp_array_soft_b)
-            temp_array_q = np.random.random((len(tictactoe_env.available_actions_ids())))
-            temp_array_p = np.zeros((len(tictactoe_env.available_actions_ids())))
-            temp_array_p[np.argmax(temp_array_q)] = 1.0
             b[s_p], pi[s_p], q[s_p], c[s_p] = dict({}), dict({}), dict({}), dict({})
-            for action_index, action in enumerate(tictactoe_env.available_actions_ids()):
-                b[s_p][action] = temp_array_soft_b[action_index]
-                pi[s_p][action] = temp_array_p[action_index]
-                q[s_p][action] = temp_array_q[action_index]
-                c[s_p][action] = 0.0
+            if len(tictactoe_env.available_actions_ids()):
+                temp_array_q = np.random.random((len(tictactoe_env.available_actions_ids())))
+                temp_array_p = np.zeros((len(tictactoe_env.available_actions_ids())))
+                temp_array_p[np.argmax(temp_array_q)] = 1.0
+                for action_index, action in enumerate(tictactoe_env.available_actions_ids()):
+                    b[s_p][action] = temp_array_soft_b[action_index]
+                    pi[s_p][action] = temp_array_p[action_index]
+                    q[s_p][action] = temp_array_q[action_index]
+                    c[s_p][action] = 0.0
             r = tictactoe_env.score()
             s_history.append(s)
             a_history.append(a)
@@ -344,7 +351,7 @@ def off_policy_monte_carlo_control_on_tic_tac_toe_solo(iter_count=100, epsilon_s
     return PolicyAndActionValueFunction(pi=pi, q=q)
 
 
-def monte_carlo_es_on_secret_env2(iter_count=100) -> PolicyAndActionValueFunction:
+def monte_carlo_es_on_secret_env2(iter_count=10) -> PolicyAndActionValueFunction:
     """
     Creates a Secret Env2
     Launches a Monte Carlo ES (Exploring Starts) in order to find the optimal Policy and its action-value function
@@ -447,7 +454,7 @@ def monte_carlo_es_on_secret_env2(iter_count=100) -> PolicyAndActionValueFunctio
     return PolicyAndActionValueFunction(pi=pi, q=q)
 
 
-def on_policy_first_visit_monte_carlo_control_on_secret_env2(iter_count=100, epsilon_soft_pi=0.001) -> PolicyAndActionValueFunction:
+def on_policy_first_visit_monte_carlo_control_on_secret_env2(iter_count=10, epsilon_soft_pi=0.001) -> PolicyAndActionValueFunction:
     """
     Creates a Secret Env2
     Launches an On Policy First Visit Monte Carlo Control algorithm in order to find the optimal epsilon-greedy Policy and its action-value function
@@ -566,7 +573,7 @@ def on_policy_first_visit_monte_carlo_control_on_secret_env2(iter_count=100, eps
     return PolicyAndActionValueFunction(pi=pi, q=q)
 
 
-def off_policy_monte_carlo_control_on_secret_env2(iter_count=100, epsilon_soft_b=0.001) -> PolicyAndActionValueFunction:
+def off_policy_monte_carlo_control_on_secret_env2(iter_count=10, epsilon_soft_b=0.001) -> PolicyAndActionValueFunction:
     """
     Creates a Secret Env2
     Launches an Off Policy Monte Carlo Control algorithm in order to find the optimal greedy Policy and its action-value function
@@ -624,7 +631,7 @@ def off_policy_monte_carlo_control_on_secret_env2(iter_count=100, epsilon_soft_b
             choices, probabilities = np.array(list(b[s_p].keys())), np.array(list(b[s_p].values()))
             probabilities /= np.sum(probabilities)
             a = np.random.choice(choices, p=probabilities)
-            env.act_with_action_id(a0)
+            env.act_with_action_id(a)
             s = s_p
             s_p = env.state_id()
             temp_array_soft_b = np.random.uniform(epsilon_soft_b, 1, (len(env.available_actions_ids())))
@@ -632,15 +639,16 @@ def off_policy_monte_carlo_control_on_secret_env2(iter_count=100, epsilon_soft_b
             while ((temp_array_soft_b < epsilon_soft_b).any()):
                 temp_array_soft_b[np.argmin(temp_array_soft_b)] *= 2
                 temp_array_soft_b /= np.sum(temp_array_soft_b)
-            temp_array_q = np.random.random((len(env.available_actions_ids())))
-            temp_array_p = np.zeros((len(env.available_actions_ids())))
-            temp_array_p[np.argmax(temp_array_q)] = 1.0
             b[s_p], pi[s_p], q[s_p], c[s_p] = dict({}), dict({}), dict({}), dict({})
-            for action_index, action in enumerate(env.available_actions_ids()):
-                b[s_p][action] = temp_array_soft_b[action_index]
-                pi[s_p][action] = temp_array_p[action_index]
-                q[s_p][action] = temp_array_q[action_index]
-                c[s_p][action] = 0.0
+            if len(env.available_actions_ids()):
+                temp_array_q = np.random.random((len(env.available_actions_ids())))
+                temp_array_p = np.zeros((len(env.available_actions_ids())))
+                temp_array_p[np.argmax(temp_array_q)] = 1.0
+                for action_index, action in enumerate(env.available_actions_ids()):
+                    b[s_p][action] = temp_array_soft_b[action_index]
+                    pi[s_p][action] = temp_array_p[action_index]
+                    q[s_p][action] = temp_array_q[action_index]
+                    c[s_p][action] = 0.0
             r = env.score()
             s_history.append(s)
             a_history.append(a)
@@ -677,9 +685,9 @@ def off_policy_monte_carlo_control_on_secret_env2(iter_count=100, epsilon_soft_b
 
 
 def demo():
-    print(monte_carlo_es_on_tic_tac_toe_solo(iter_count=1000000))
-    print(on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo(iter_count=1000000))
-    print(off_policy_monte_carlo_control_on_tic_tac_toe_solo(iter_count=1000000))
-    print(monte_carlo_es_on_secret_env2(iter_count=1000000))
-    print(on_policy_first_visit_monte_carlo_control_on_secret_env2(iter_count=1000000))
-    print(off_policy_monte_carlo_control_on_secret_env2(iter_count=1000000))
+    print(monte_carlo_es_on_tic_tac_toe_solo())
+    print(on_policy_first_visit_monte_carlo_control_on_tic_tac_toe_solo())
+    print(off_policy_monte_carlo_control_on_tic_tac_toe_solo())
+    print(monte_carlo_es_on_secret_env2())
+    print(on_policy_first_visit_monte_carlo_control_on_secret_env2())
+    print(off_policy_monte_carlo_control_on_secret_env2())
